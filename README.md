@@ -2,33 +2,44 @@
 
 ## Project Overview
 
-This project uses Wireshark to capture and analyze network traffic. The goal is to identify common protocols, understand how devices communicate, and document notable findings from packet captures.
+This project documents a controlled Wireshark capture used to examine DNS resolution, ICMP connectivity testing, the TCP three-way handshake, and TLS-encrypted HTTPS traffic.
 
-## Objectives
+## What I Analyzed
 
-- Capture authorized network traffic in a controlled environment
-- Apply Wireshark display filters
-- Analyze DNS, TCP, HTTP/HTTPS, and ICMP traffic
-- Identify source and destination IP addresses, ports, and protocol behavior
-- Document findings with screenshots and explanations
+- DNS A and AAAA queries for `example.com`
+- ICMP echo requests and replies involving `8.8.8.8`
+- TCP SYN, SYN-ACK, and ACK packets
+- A TLS 1.3 Client Hello and encrypted application traffic
 
 ## Tools
 
-- Wireshark
-- Web browser
-- Command Prompt or PowerShell
-- GitHub
+- Wireshark 4.6.8
+- Windows Command Prompt
+- `nslookup`
+- `ping`
+- `curl`
 
-## Analysis
+## Display Filters
 
-Analysis results, screenshots, filters, and observations will be added as the project progresses.
+```text
+dns.qry.name == "example.com"
+icmp
+tcp.port == <temporary-client-port>
+tls.handshake.extensions_server_name == "example.com"
+```
 
-## Planned Repository Structure
+## Results
 
-- `captures/` — sanitized packet-capture files
-- `screenshots/` — screenshots supporting the analysis
-- `analysis/` — written findings and notes
+The capture demonstrated how DNS resolves domain names, how ICMP tests reachability, how TCP establishes a connection, and how TLS protects HTTPS application data.
 
-## Security and Privacy
+Read the full [analysis findings](analysis/findings.md).
 
-Only traffic captured with authorization will be analyzed. Packet captures will be reviewed for passwords, session tokens, personal information, and other sensitive data before being uploaded.
+## Repository Structure
+
+- `analysis/` — written findings
+- `screenshots/` — sanitized packet evidence when added
+- `captures/` — packet captures kept private unless reviewed and sanitized
+
+## Privacy
+
+Private client addresses, hardware addresses, temporary client ports, and potentially sensitive packet data are excluded from the public report. Traffic was captured only on an authorized device and network.
