@@ -34,12 +34,34 @@ The capture demonstrated how DNS resolves domain names, how ICMP tests reachabil
 
 Read the full [analysis findings](analysis/findings.md).
 
+## Evidence
+
+### DNS Query and Response
+
+![Redacted DNS query](screenshots/dns-query.png)
+
+![Redacted DNS response](screenshots/dns-response.png)
+
+### ICMP Connectivity Test
+
+![Redacted ICMP overview](screenshots/icmp-overview.png)
+
+![Redacted ICMP echo request](screenshots/icmp-request.png)
+
+![Redacted ICMP echo reply](screenshots/icmp-reply.png)
+
+### TCP and TLS
+
+![Redacted TCP three-way handshake](screenshots/tcp-handshake.png)
+
+![Redacted TLS Client Hello](screenshots/tls-client-hello.png)
+
 ## Repository Structure
 
 - `analysis/` — written findings
-- `screenshots/` — sanitized packet evidence when added
+- `screenshots/` — redacted packet evidence
 - `captures/` — packet captures kept private unless reviewed and sanitized
 
 ## Privacy
 
-Private client addresses, hardware addresses, temporary client ports, and potentially sensitive packet data are excluded from the public report. Traffic was captured only on an authorized device and network.
+Private client addresses, hardware addresses, temporary client ports, raw packet bytes, and potentially sensitive packet data were redacted or excluded. Traffic was captured only on an authorized device and network.
