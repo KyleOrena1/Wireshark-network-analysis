@@ -1,12 +1,19 @@
 # Wireshark Analysis
 
-## Setup
+## Purpose
 
-I captured traffic from my Windows laptop over Wi-Fi using Wireshark 4.6.8. I used `nslookup`, `ping`, `curl`, and `Test-NetConnection` to create traffic I could analyze.
+The goal of this project was to capture common network traffic, analyze how the protocols behave, and use packet evidence to compare a successful TCP connection with a failed one.
 
-I removed my local addresses, hardware information, and temporary ports before publishing the screenshots.
+## Lab Setup
 
-## DNS
+- Windows laptop connected through Wi-Fi
+- Wireshark 4.6.8
+- Command Prompt and PowerShell
+- Traffic generated with `nslookup`, `ping`, `curl`, and `Test-NetConnection`
+
+Local addresses, hardware information, temporary client ports, and raw packet bytes were removed from the published screenshots.
+
+## DNS Analysis
 
 I ran:
 
@@ -14,47 +21,41 @@ I ran:
 nslookup example.com
 ```
 
-Then I used this filter:
+I isolated the traffic with:
 
 ```text
 dns.qry.name == "example.com"
 ```
 
-The capture showed both A and AAAA queries. The A response returned `172.66.147.243` and `104.20.23.154`. The response took about `19.71 ms` and used DNS port `53`.
+The capture showed A and AAAA queries. The A response returned `172.66.147.243` and `104.20.23.154`. It used DNS port `53` and arrived in about `19.71 ms`.
 
-This showed me what happens before a browser connects to a website: the computer first asks a DNS server for the site's IP address.
+This confirmed that the client resolved the domain name before connecting to the website.
 
-## ICMP
+## ICMP Analysis
 
-I ran `ping 8.8.8.8` and filtered for:
-
-```text
-icmp
-```
-
-Wireshark captured four echo requests and four matching replies.
+I ran `ping 8.8.8.8` and applied the `icmp` filter. Wireshark captured four echo requests and four matching replies.
 
 - Echo request: Type `8`, Code `0`
 - Echo reply: Type `0`, Code `0`
 - Packet size: `74 bytes`
-- ICMP data: `32 bytes`
+- ICMP payload: `32 bytes`
 - First response time: `29.95 ms`
 
-The matching identifiers and sequence numbers connected each request to its reply. Since every request received a reply, the destination was reachable.
+The identifiers and sequence numbers matched each request with its reply. All four replies were received, confirming that the destination was reachable.
 
 ## Successful TCP Connection
 
-I ran `curl https://example.com` and found the correct connection by filtering for the site's TLS server name.
+I ran `curl https://example.com` and located the correct connection by filtering for the site's TLS server name.
 
-The first three packets were:
+The connection began with:
 
 1. `SYN`
 2. `SYN, ACK`
 3. `ACK`
 
-That completed the TCP three-way handshake. Afterward, the client and server began the TLS exchange over port `443`.
+These packets completed the TCP three-way handshake. The client and server then began a TLS session over port `443`.
 
-## TLS
+## TLS Analysis
 
 The capture showed a TLS 1.3 Client Hello for `example.com`, followed by a Server Hello and encrypted application data.
 
@@ -64,35 +65,35 @@ I used:
 tls.handshake.extensions_server_name == "example.com"
 ```
 
-Wireshark could still show the server name, protocol, packet sizes, and timing, but it could not display the encrypted page content. This is a useful example of the difference between encrypted content and visible connection metadata.
+Wireshark displayed connection metadata such as the server name, protocol, packet sizes, and timing. The HTTPS page content remained encrypted.
 
 ## Failed TCP Connection
 
-To compare a successful connection with a failed one, I ran:
+To compare the successful connection with a failed one, I ran:
 
 ```powershell
 Test-NetConnection 192.0.2.1 -Port 443
 ```
 
-I filtered the capture with:
+I isolated the packets with:
 
 ```text
 ip.addr == 192.0.2.1 && tcp
 ```
 
-The client sent an initial SYN and then retransmitted it four times. No SYN-ACK came back, so the handshake never completed.
+The client sent an initial SYN and retransmitted it four times. No SYN-ACK returned, so the handshake never completed.
 
-A result like this can point to an unreachable system, a blocked port, a firewall rule, or a routing problem. It is different from the successful connection to `example.com`, where the SYN received a SYN-ACK immediately.
+This pattern can indicate an unreachable system, a blocked port, a firewall rule, or a routing problem.
 
 | Test | Packets observed | Result |
 | --- | --- | --- |
 | Successful HTTPS connection | SYN, SYN-ACK, ACK | Handshake completed |
 | Failed connection | SYN followed by four retransmissions | No connection established |
 
-## What I Learned
+## Key Takeaways
 
-- DNS resolves names before most connections begin.
+- DNS resolves domain names before most connections begin.
 - ICMP can confirm whether a destination is reachable.
-- A successful TCP connection starts with a three-way handshake.
-- Repeated SYN packets without a SYN-ACK are a useful troubleshooting clue.
-- TLS encrypts the application data, but some connection metadata remains visible.
+- TCP uses a three-way handshake to establish a connection.
+- Repeated SYN packets without a SYN-ACK provide a clear troubleshooting clue.
+- TLS protects application content while leaving limited connection metadata visible.
