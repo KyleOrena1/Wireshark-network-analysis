@@ -1,39 +1,32 @@
-# Wireshark Analysis
-
-## Purpose
-
-The goal of this project was to capture common network traffic, analyze how the protocols behave, and use packet evidence to compare a successful TCP connection with a failed one.
+# Detailed Wireshark Analysis
 
 ## Lab Setup
 
-- Windows laptop connected through Wi-Fi
-- Wireshark 4.6.8
-- Command Prompt and PowerShell
-- Traffic generated with `nslookup`, `ping`, `curl`, and `Test-NetConnection`
+I completed the capture on a Windows laptop connected through Wi-Fi. I used Wireshark 4.6.8 along with Command Prompt and PowerShell. The test traffic was generated with `nslookup`, `ping`, `curl`, and `Test-NetConnection`.
 
-Local addresses, hardware information, temporary client ports, and raw packet bytes were removed from the published screenshots.
+Before uploading the screenshots, I removed local addresses, hardware information, temporary client ports, and raw packet bytes.
 
-## DNS Analysis
+## DNS
 
-I ran:
+I started by running:
 
 ```text
 nslookup example.com
 ```
 
-I isolated the traffic with:
+I then isolated the DNS traffic with this filter:
 
 ```text
 dns.qry.name == "example.com"
 ```
 
-The capture showed A and AAAA queries. The A response returned `172.66.147.243` and `104.20.23.154`. It used DNS port `53` and arrived in about `19.71 ms`.
+The capture included both A and AAAA queries. The A response returned `172.66.147.243` and `104.20.23.154`. The response used DNS port `53` and arrived in about `19.71 ms`.
 
-This confirmed that the client resolved the domain name before connecting to the website.
+This showed the computer resolving the domain name before connecting to the website.
 
-## ICMP Analysis
+## ICMP
 
-I ran `ping 8.8.8.8` and applied the `icmp` filter. Wireshark captured four echo requests and four matching replies.
+Next, I ran `ping 8.8.8.8` and used the `icmp` filter. Wireshark captured four echo requests and four replies.
 
 - Echo request: Type `8`, Code `0`
 - Echo reply: Type `0`, Code `0`
@@ -41,59 +34,59 @@ I ran `ping 8.8.8.8` and applied the `icmp` filter. Wireshark captured four echo
 - ICMP payload: `32 bytes`
 - First response time: `29.95 ms`
 
-The identifiers and sequence numbers matched each request with its reply. All four replies were received, confirming that the destination was reachable.
+The identifiers and sequence numbers connected each request to its reply. Since all four replies came back, the destination was reachable during the test.
 
 ## Successful TCP Connection
 
-I ran `curl https://example.com` and located the correct connection by filtering for the site's TLS server name.
+To create an HTTPS connection, I ran:
 
-The connection began with:
+```text
+curl https://example.com
+```
+
+I located the connection by filtering for the site's TLS server name. The first three packets in the connection were:
 
 1. `SYN`
 2. `SYN, ACK`
 3. `ACK`
 
-These packets completed the TCP three-way handshake. The client and server then began a TLS session over port `443`.
+These packets completed the TCP three-way handshake. The client and server then started a TLS session over port `443`.
 
-## TLS Analysis
+## TLS
 
-The capture showed a TLS 1.3 Client Hello for `example.com`, followed by a Server Hello and encrypted application data.
+The capture showed a TLS 1.3 Client Hello for `example.com`, followed by a Server Hello and encrypted application traffic.
 
-I used:
+I used this filter:
 
 ```text
 tls.handshake.extensions_server_name == "example.com"
 ```
 
-Wireshark displayed connection metadata such as the server name, protocol, packet sizes, and timing. The HTTPS page content remained encrypted.
+Wireshark still showed connection details such as the server name, protocol, packet sizes, and timing, but the HTTPS page content was encrypted.
 
 ## Failed TCP Connection
 
-To compare the successful connection with a failed one, I ran:
+For comparison, I tested a connection to `192.0.2.1`, an address reserved for documentation and testing:
 
 ```powershell
 Test-NetConnection 192.0.2.1 -Port 443
 ```
 
-I isolated the packets with:
+I filtered the capture with:
 
 ```text
 ip.addr == 192.0.2.1 && tcp
 ```
 
-The client sent an initial SYN and retransmitted it four times. No SYN-ACK returned, so the handshake never completed.
+The computer sent an initial SYN and retransmitted it four times. No SYN-ACK came back, so the TCP handshake never finished.
 
-This pattern can indicate an unreachable system, a blocked port, a firewall rule, or a routing problem.
+That pattern does not prove one specific cause by itself. It can appear when a host is unreachable, a firewall is dropping traffic, a route is unavailable, or a service is not responding.
 
-| Test | Packets observed | Result |
+| Connection | Packets observed | Result |
 | --- | --- | --- |
 | Successful HTTPS connection | SYN, SYN-ACK, ACK | Handshake completed |
-| Failed connection | SYN followed by four retransmissions | No connection established |
+| Failed connection | Initial SYN and four retransmissions | No connection established |
 
-## Key Takeaways
+## Takeaways
 
-- DNS resolves domain names before most connections begin.
-- ICMP can confirm whether a destination is reachable.
-- TCP uses a three-way handshake to establish a connection.
-- Repeated SYN packets without a SYN-ACK provide a clear troubleshooting clue.
-- TLS protects application content while leaving limited connection metadata visible.
+This project helped me connect the packet details in Wireshark to what was happening on the network. I practiced following DNS resolution, matching ICMP requests with replies, identifying a complete TCP handshake, and recognizing the pattern of an unanswered connection attempt. I also saw how TLS protects web content while leaving some connection information visible.
