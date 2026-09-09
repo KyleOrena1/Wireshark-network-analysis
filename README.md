@@ -1,20 +1,19 @@
 # Wireshark Network Traffic Analysis
 
-A hands-on packet analysis project examining DNS, ICMP, TCP, and TLS traffic in Wireshark. The lab compares a successful HTTPS connection with a failed TCP connection to show how packet captures support basic network troubleshooting.
+For this project, I used Wireshark to capture and examine DNS, ICMP, TCP, and TLS traffic. I also compared a successful HTTPS connection with a failed TCP connection to practice identifying common network behavior and basic connection problems.
 
 ![TCP three-way handshake](screenshots/tcp-handshake.png)
 
-## Project Summary
+## What I Did
 
-| Area | What I analyzed | Key result |
-| --- | --- | --- |
-| DNS | A and AAAA queries for `example.com` | Confirmed name resolution before the HTTPS connection |
-| ICMP | Echo requests and replies to `8.8.8.8` | Matched four requests with four successful replies |
-| TCP | A successful three-way handshake | Identified the SYN, SYN-ACK, and ACK sequence |
-| TLS | A TLS 1.3 Client Hello and encrypted traffic | Verified HTTPS setup while application data remained encrypted |
-| Troubleshooting | A failed connection to a documentation-only test address | Observed repeated SYN retransmissions with no SYN-ACK |
+- Used `nslookup` to generate DNS traffic for `example.com`
+- Pinged `8.8.8.8` and reviewed the ICMP requests and replies
+- Captured a successful TCP three-way handshake
+- Examined a TLS 1.3 Client Hello and the encrypted traffic that followed
+- Tested a failed TCP connection and identified repeated SYN retransmissions
+- Redacted private network information before publishing the screenshots
 
-## Tools Used
+## Tools
 
 - Wireshark 4.6.8
 - Windows Command Prompt and PowerShell
@@ -23,16 +22,7 @@ A hands-on packet analysis project examining DNS, ICMP, TCP, and TLS traffic in 
 - `curl`
 - `Test-NetConnection`
 
-## Method
-
-1. Generated controlled DNS, ICMP, TCP, and TLS traffic.
-2. Captured the traffic through the active Wi-Fi interface.
-3. Used Wireshark display filters to isolate each exchange.
-4. Reviewed protocol fields, packet timing, and connection behavior.
-5. Compared a completed TCP handshake with an unsuccessful connection attempt.
-6. Redacted private network information before publishing screenshots.
-
-## Display Filters
+## Filters Used
 
 ```text
 dns.qry.name == "example.com"
@@ -41,25 +31,25 @@ tls.handshake.extensions_server_name == "example.com"
 ip.addr == 192.0.2.1 && tcp
 ```
 
-## Key Findings
+## What I Found
 
-- DNS resolution returned A and AAAA records before the HTTPS connection began.
-- Four ICMP echo requests received four matching replies, confirming reachability.
-- The successful HTTPS connection completed the TCP three-way handshake before beginning TLS.
-- The failed connection produced an initial SYN and four retransmissions without a SYN-ACK.
-- Repeated unanswered SYN packets can point to filtering, routing, reachability, or service availability problems.
+The DNS capture showed A and AAAA lookups for `example.com`. My ICMP test captured four echo requests and four matching replies, confirming that the destination was reachable.
 
-Read the detailed packet-by-packet write-up in [analysis/findings.md](analysis/findings.md).
+For the successful HTTPS connection, I found the SYN, SYN-ACK, and ACK packets that completed the TCP three-way handshake. The TLS handshake began afterward, and the application traffic was encrypted.
 
-## Evidence
+The failed connection showed a different pattern. The computer sent an initial SYN followed by four retransmissions, but no SYN-ACK came back. This could point to a blocked port, an unreachable host, a routing issue, or a service that is not responding.
 
-### DNS Resolution
+A more detailed breakdown is available in [analysis/findings.md](analysis/findings.md).
+
+## Screenshots
+
+### DNS
 
 ![DNS query](screenshots/dns-query.png)
 
 ![DNS response](screenshots/dns-response.png)
 
-### ICMP Reachability
+### ICMP
 
 ![ICMP overview](screenshots/icmp-overview.png)
 
@@ -77,14 +67,15 @@ Read the detailed packet-by-packet write-up in [analysis/findings.md](analysis/f
 
 ![TCP SYN retransmissions](screenshots/tcp-failed-connection.png)
 
-## Skills Demonstrated
+## What I Practiced
 
-- Packet capture and display filtering
-- DNS, ICMP, TCP, and TLS analysis
-- TCP connection troubleshooting
-- Evidence-based technical documentation
-- Data sanitization and privacy awareness
+- Capturing and filtering network traffic
+- Reading DNS, ICMP, TCP, and TLS packets
+- Recognizing a TCP three-way handshake
+- Troubleshooting a failed connection using packet evidence
+- Writing clear technical notes
+- Sanitizing information before sharing it publicly
 
-## Privacy Note
+## Privacy
 
-Local addresses, hardware information, temporary client ports, and raw packet bytes were removed from the published screenshots. Original packet captures are not included because they may contain sensitive network data.
+I removed local addresses, hardware information, temporary client ports, and raw packet bytes from the screenshots. I did not upload the original packet captures because they may contain private network data.
